@@ -848,6 +848,130 @@ footer a {
   </div>
 </div>
 
+<!-- ===== 新着情報 ===== -->
+<section id="news">
+  <div class="section-label">NEWS</div>
+  <h2 class="section-title">新着情報</h2>
+  <div class="section-divider"></div>
+  <div id="news-list">
+    <div id="news-loading" style="text-align:center; padding:32px; color:var(--text-light); font-size:0.9rem;">
+      <span style="font-size:1.5rem; display:block; margin-bottom:8px;">📋</span>
+      読み込み中...
+    </div>
+  </div>
+  <div id="news-empty" style="display:none; text-align:center; padding:32px; color:var(--text-light); font-size:0.9rem;">
+    現在、新着情報はありません。
+  </div>
+</section>
+
+<style>
+/* ===== 新着情報 ===== */
+#news { max-width: 900px; margin: 0 auto; padding: 64px 16px; }
+.news-item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--sky-mid);
+}
+.news-item:first-child { border-top: 1px solid var(--sky-mid); }
+.news-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+  min-width: 120px;
+}
+.news-date {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  white-space: nowrap;
+}
+.news-category {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 50px;
+  background: var(--sky-mid);
+  color: var(--navy);
+  white-space: nowrap;
+}
+.news-category.cat-event   { background: #ffd6e8; color: var(--pink); }
+.news-category.cat-recruit { background: #d6f0d6; color: #2a7a2a; }
+.news-category.cat-other   { background: var(--gray); color: var(--text-light); }
+.news-title {
+  font-size: 0.92rem;
+  color: var(--navy);
+  line-height: 1.7;
+  font-weight: 500;
+}
+@media (max-width: 480px) {
+  .news-item { flex-direction: column; gap: 6px; }
+  .news-meta { flex-direction: row; align-items: center; gap: 8px; }
+}
+</style>
+
+<script>
+// ===== 新着情報 読み込み =====
+// GASデプロイ後、下記URLを差し替えてください
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwJX6gV8WdzXQietvehh_uv9SXFQMc-9k_dT6aNO9nYp1boOm7L4ygqOqe4Rjtn6Y0SYw/exec';
+
+const categoryClass = {
+  'イベント': 'cat-event',
+  '採用情報': 'cat-recruit',
+  'その他':   'cat-other',
+};
+
+async function loadNews() {
+  const listEl    = document.getElementById('news-list');
+  const loadingEl = document.getElementById('news-loading');
+  const emptyEl   = document.getElementById('news-empty');
+
+  // GAS URLが未設定の場合はサンプル表示
+  if (GAS_URL === 'YOUR_GAS_URL_HERE') {
+    loadingEl.style.display = 'none';
+    const sample = [
+      { date: '2025年04月17日', category: 'お知らせ', title: '令和7年度の営業日程についてのお知らせ', body: '' },
+      { date: '2025年04月01日', category: 'イベント',  title: '春の体験見学会を開催します',           body: '' },
+    ];
+    renderNews(sample, listEl, emptyEl);
+    return;
+  }
+
+  try {
+    const res  = await fetch(GAS_URL);
+    const data = await res.json();
+    loadingEl.style.display = 'none';
+    if (data.status === 'ok' && data.news.length > 0) {
+      renderNews(data.news, listEl, emptyEl);
+    } else {
+      emptyEl.style.display = 'block';
+    }
+  } catch (e) {
+    loadingEl.innerHTML = '<span style="color:#c00;">新着情報の読み込みに失敗しました。</span>';
+  }
+}
+
+function renderNews(items, listEl, emptyEl) {
+  if (items.length === 0) { emptyEl.style.display = 'block'; return; }
+  const html = items.map(item => {
+    const catClass = categoryClass[item.category] || '';
+    return `
+      <div class="news-item">
+        <div class="news-meta">
+          <span class="news-date">${item.date}</span>
+          <span class="news-category ${catClass}">${item.category}</span>
+        </div>
+        <div class="news-title">${item.title}</div>
+      </div>`;
+  }).join('');
+  listEl.innerHTML = html;
+}
+
+document.addEventListener('DOMContentLoaded', loadNews);
+</script>
+
 <!-- ===== ストーリー ===== -->
 <div class="section-bg-sky">
   <div class="section-inner">
@@ -1134,6 +1258,45 @@ footer a {
     </div>
   </div>
 </section>
+
+<!-- ===== お問い合わせフォーム ===== -->
+<div class="section-bg-sky">
+  <div class="section-inner">
+    <section style="padding: 0;">
+      <div class="section-label">CONTACT</div>
+      <h2 class="section-title">お問い合わせ・<br><span class="pink">見学のご予約</span></h2>
+      <div class="section-divider"></div>
+      <p style="font-size:0.92rem; color:var(--text-light); margin-bottom:24px; line-height:1.9;">
+        「見学だけしたい」「うちの子でも通えるか聞きたい」など、<br>
+        どんな小さなご相談もお気軽にどうぞ。<br>
+        通常2〜3営業日以内にご連絡いたします。
+      </p>
+      <div style="
+        background: var(--white);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        padding: 8px;
+      ">
+        <iframe
+          src="https://docs.google.com/forms/d/e/1FAIpQLSf_-Q57rPF_y0cKJErsXcNwR2r2pAEEED8cREWz-vbhZCBuiw/viewform?embedded=true"
+          width="100%"
+          height="1273"
+          frameborder="0"
+          marginheight="0"
+          marginwidth="0"
+          style="display:block; max-width:100%;"
+          title="お問い合わせ・見学のご予約フォーム">
+          読み込んでいます…
+        </iframe>
+      </div>
+      <p style="text-align:center; font-size:0.8rem; color:var(--text-light); margin-top:16px;">
+        ※お急ぎの方はお電話にてご連絡ください。<br>
+        <a href="tel:0992040415" style="color:var(--pink); font-weight:700; text-decoration:none;">📞 099-204-0415</a>　月〜土曜日 11:00〜17:00
+      </p>
+    </section>
+  </div>
+</div>
 
 <!-- ===== 最終CTA ===== -->
 <div class="final-cta">
