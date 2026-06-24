@@ -923,34 +923,42 @@ const categoryClass = {
   'その他':   'cat-other',
 };
 
-async function loadNews() {
+function loadNews() {
   const listEl    = document.getElementById('news-list');
   const loadingEl = document.getElementById('news-loading');
   const emptyEl   = document.getElementById('news-empty');
 
-  // GAS URLが未設定の場合はサンプル表示
-  if (GAS_URL === 'YOUR_GAS_URL_HERE') {
-    loadingEl.style.display = 'none';
-    const sample = [
-      { date: '2025年04月17日', category: 'お知らせ', title: '令和7年度の営業日程についてのお知らせ', body: '' },
-      { date: '2025年04月01日', category: 'イベント',  title: '春の体験見学会を開催します',           body: '' },
-    ];
-    renderNews(sample, listEl, emptyEl);
-    return;
-  }
+  // JSONP方式でCORSを回避
+  const callbackName = 'egaoNewsCallback';
+  const script = document.createElement('script');
 
-  try {
-    const res  = await fetch(GAS_URL);
-    const data = await res.json();
+  // タイムアウト処理（10秒）
+  const timer = setTimeout(function() {
+    loadingEl.innerHTML = '<span style="color:#c00;">新着情報の読み込みに失敗しました。</span>';
+    delete window[callbackName];
+    if (script.parentNode) script.parentNode.removeChild(script);
+  }, 10000);
+
+  window[callbackName] = function(data) {
+    clearTimeout(timer);
     loadingEl.style.display = 'none';
-    if (data.status === 'ok' && data.news.length > 0) {
+    delete window[callbackName];
+    if (script.parentNode) script.parentNode.removeChild(script);
+
+    if (data.status === 'ok' && data.news && data.news.length > 0) {
       renderNews(data.news, listEl, emptyEl);
     } else {
       emptyEl.style.display = 'block';
     }
-  } catch (e) {
+  };
+
+  script.src = GAS_URL + '?callback=' + callbackName;
+  script.onerror = function() {
+    clearTimeout(timer);
     loadingEl.innerHTML = '<span style="color:#c00;">新着情報の読み込みに失敗しました。</span>';
-  }
+    delete window[callbackName];
+  };
+  document.head.appendChild(script);
 }
 
 function renderNews(items, listEl, emptyEl) {
