@@ -906,6 +906,13 @@ footer a {
   line-height: 1.7;
   font-weight: 500;
 }
+.news-body {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  line-height: 1.7;
+  margin-top: 4px;
+  word-break: break-all;
+}
 @media (max-width: 480px) {
   .news-item { flex-direction: column; gap: 6px; }
   .news-meta { flex-direction: row; align-items: center; gap: 8px; }
@@ -963,16 +970,30 @@ function loadNews() {
 
 function renderNews(items, listEl, emptyEl) {
   if (items.length === 0) { emptyEl.style.display = 'block'; return; }
-  const html = items.map(item => {
+  const html = items.map(function(item) {
     const catClass = categoryClass[item.category] || '';
-    return `
-      <div class="news-item">
-        <div class="news-meta">
-          <span class="news-date">${item.date}</span>
-          <span class="news-category ${catClass}">${item.category}</span>
-        </div>
-        <div class="news-title">${item.title}</div>
-      </div>`;
+
+    // D列：URLかテキストかを判定して表示を切り替え
+    let bodyHtml = '';
+    if (item.body) {
+      const urlPattern = /^https?:\/\/\S+$/;
+      if (urlPattern.test(item.body.trim())) {
+        bodyHtml = '<div class="news-body"><a href="' + item.body.trim() + '" target="_blank" rel="noopener noreferrer" style="color:var(--sky-dark); text-decoration:underline;">' + item.body.trim() + '</a></div>';
+      } else {
+        bodyHtml = '<div class="news-body">' + item.body + '</div>';
+      }
+    }
+
+    return '<div class="news-item">'
+      + '<div class="news-meta">'
+      + '<span class="news-date">' + item.date + '</span>'
+      + '<span class="news-category ' + catClass + '">' + item.category + '</span>'
+      + '</div>'
+      + '<div class="news-content">'
+      + '<div class="news-title">' + item.title + '</div>'
+      + bodyHtml
+      + '</div>'
+      + '</div>';
   }).join('');
   listEl.innerHTML = html;
 }
